@@ -1,0 +1,16 @@
+{
+  "scriptFile" : "../pucc-functions-1.0.jar",
+  "entryPoint" : "com.sigel.pucc.functions.functions.api.Api.run",
+  "bindings" : [ {
+    "type" : "httpTrigger",
+    "direction" : "in",
+    "name" : "req",
+    "route" : "api/{*route}",
+    "methods" : [ ],
+    "authLevel" : "FUNCTION"
+  }, {
+    "type" : "http",
+    "direction" : "out",
+    "name" : "$return"
+  } ]
+}

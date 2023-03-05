@@ -1,0 +1,9 @@
+{
+	"IsEncrypted": false,
+	"Values": {
+		"AzureWebJobsStorage": "",
+		"FUNCTIONS_WORKER_RUNTIME": "java",
+		"PuccUrl": "http://34.211.150.10:8008/pucc/",
+		"MmceTokenUrl": "https://func-miclarocorp-dev-01-bridge.azurewebsites.net/api/Login/validateToken"
+	}
+}
