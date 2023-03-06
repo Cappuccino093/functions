@@ -1,13 +1,17 @@
 package com.sigel.pucc.functions.dto;
 
 import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 
 /**
  * Clase que contiene la respuesta de la validación de token de MMCE
  */
 public class MmceTokenResponse {
 
+	@SerializedName("estado")
 	private MmceTokenResponseStatus status;
+
+	@SerializedName("resultado")
 	private String result;
 
 	/**

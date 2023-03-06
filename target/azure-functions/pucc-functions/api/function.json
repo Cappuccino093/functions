@@ -6,7 +6,7 @@
     "direction" : "in",
     "name" : "req",
     "route" : "api/{*route}",
-    "methods" : [ ],
+    "methods" : [ "GET", "HEAD", "POST", "PUT", "DELETE", "CONNECT", "OPTIONS", "TRACE", "PATCH" ],
     "authLevel" : "FUNCTION"
   }, {
     "type" : "http",

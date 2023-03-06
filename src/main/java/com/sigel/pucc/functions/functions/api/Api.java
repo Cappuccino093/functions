@@ -94,6 +94,7 @@ public class Api {
 		}
 
 		// Validar los headers de la petición
+		executionContext.getLogger().info("Validando los headers de la petición.");
 		String username = httpRequestMessage.getHeaders().get("user-name");
 		String token = httpRequestMessage.getHeaders().get("pucc-token");
 
@@ -105,8 +106,8 @@ public class Api {
 					new Response(
 						"Unauthorized",
 						(short) HttpStatus.UNAUTHORIZED.value(),
-						"No se ha proporcionado ningún usuario ni token en la petición.",
-						new NullPointerException().toString(),
+						"No tiene acceso.",
+						new HttpUnauthorizedException("No tiene acceso").toString(),
 						null
 					)
 				)
@@ -114,10 +115,12 @@ public class Api {
 		}
 
 		// Validar el token de MMCE
+		executionContext.getLogger().info("Validando token de MMCE.");
 		HttpRequest httpRequest = HttpRequest
 			.newBuilder()
 			.uri(URI.create(mmceTokenUrl))
 			.POST(HttpRequest.BodyPublishers.ofString((new MmceToken(username, token)).toJson()))
+			.header("Content-Type", "application/json")
 			.build();
 
 		HttpResponse<String> httpResponse;
@@ -125,6 +128,7 @@ public class Api {
 		try {
 			httpResponse = httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString()).get();
 		} catch (InterruptedException | ExecutionException exception) {
+			executionContext.getLogger().severe("Error al validar el token de MMCE.");
 			return httpRequestMessage
 				.createResponseBuilder(HttpStatus.INTERNAL_SERVER_ERROR)
 				.body(
@@ -139,17 +143,17 @@ public class Api {
 				.build();
 		}
 
-		MmceTokenResponse mmceTokenResponse = MmceTokenResponse.fromJson(httpResponse.body());
+		MmceTokenResponse mmceTokenResponse = MmceTokenResponse.fromJson(httpResponse.body().toString());
 
-		if (mmceTokenResponse == null || mmceTokenResponse.getResult() != "Sesion valida") {
+		if (mmceTokenResponse == null || !mmceTokenResponse.getResult().equals("Sesion valida")) {
 			return httpRequestMessage
 				.createResponseBuilder(HttpStatus.UNAUTHORIZED)
 				.body(
 					new Response(
 						"Unauthorized",
 						(short) HttpStatus.UNAUTHORIZED.value(),
-						"El token no es válido.",
-						new HttpUnauthorizedException("El token no es válido").toString(),
+						"No tiene acceso.",
+						new HttpUnauthorizedException("No tiene acceso").toString(),
 						null
 					)
 				)
@@ -157,10 +161,47 @@ public class Api {
 		}
 
 		// Recibir la petición completa que se quería hacer a PUCC
-		URI uri = httpRequestMessage.getUri();
+		executionContext.getLogger().info("Realizando petición a PUCC.");
 		Map<String, String> httpHeaders = httpRequestMessage.getHeaders();
 		HttpMethod method = httpRequestMessage.getHttpMethod();
+		Optional<String> body = httpRequestMessage.getBody();
 
-		return null;
+		httpRequest =
+			HttpRequest
+				.newBuilder()
+				.uri(URI.create(puccUrl + route))
+				.method(
+					method.name(),
+					body.isPresent()
+						? HttpRequest.BodyPublishers.ofString(body.get())
+						: HttpRequest.BodyPublishers.noBody()
+				)
+				.headers("token", httpHeaders.get("token"))
+				.build();
+
+		try {
+			httpResponse = httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString()).get();
+		} catch (InterruptedException | ExecutionException exception) {
+			executionContext.getLogger().severe("Error al realizar la petición a PUCC.");
+			return httpRequestMessage
+				.createResponseBuilder(HttpStatus.INTERNAL_SERVER_ERROR)
+				.body(
+					new Response(
+						"Internal Server Error",
+						(short) HttpStatus.INTERNAL_SERVER_ERROR.value(),
+						"Error al realizar la petición a PUCC.",
+						exception.toString(),
+						null
+					)
+				)
+				.build();
+		}
+
+		// Devolver la respuesta de PUCC
+		return httpRequestMessage
+			.createResponseBuilder(HttpStatus.valueOf(httpResponse.statusCode()))
+			.header("Content-Type", "application/json")
+			.body(httpResponse.body())
+			.build();
 	}
 }

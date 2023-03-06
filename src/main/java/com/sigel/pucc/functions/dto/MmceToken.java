@@ -1,60 +1,74 @@
 package com.sigel.pucc.functions.dto;
 
-public class MmceToken {
+import com.google.gson.Gson;
 
+/**
+ * Clase que contiene el token de MMCE
+ */
+public class MmceToken {
 	private String username;
 	private String token;
 
-	public MmceToken(String puccToken, String userName) {
-		this.token = puccToken;
+	/**
+	 * Constructor de la clase
+	 * @param userName Nombre de usuario
+	 * @param puccToken Token del PUCC
+	 */
+	public MmceToken(String userName, String puccToken) {
 		this.username = userName;
+		this.token = puccToken;
 	}
 
+	/**
+	 * Obtiene el nombre de usuario
+	 * @return String con el nombre de usuario
+	 */
 	public String username() {
 		return username;
 	}
 
+	/**
+	 * Obtiene el token
+	 * @return String con el token
+	 */
 	public String token() {
 		return token;
 	}
 
+	/**
+	 * Establece el token
+	 * @param token
+	 * @return MmceToken con el token establecido
+	 */
 	public MmceToken setToken(String token) {
 		this.token = token;
 		return this;
 	}
 
+	/**
+	 * Establece el nombre de usuario
+	 * @param username
+	 * @return MmceToken con el nombre de usuario establecido
+	 */
 	public MmceToken setUsername(String username) {
 		this.username = username;
 		return this;
 	}
 
+	/**
+	 * Convierte el objeto a JSON
+	 * @return String con el JSON
+	 */
 	public String toJson() {
-		return String.format("{\"username\":\"%s\",\"token\":\"%s\"}", username, token);
+		return new Gson().toJson(this);
 	}
 
-	public static MmceToken fromJson(String json) throws Exception {
-		if (json == null || json.isEmpty()) throw new Exception("El JSON está vacío o no existe.");
-
-		String[] jsonParts = json.split("[{}:,]");
-
-		if (jsonParts.length != 6) throw new Exception("No es un JSON válido de MmceToken.");
-
-		String username = null;
-		String token = null;
-
-		for (int i = 0; i < jsonParts.length; i++) {
-			String jsonPart = jsonParts[i].trim();
-
-			if (jsonPart.equals("\"username\"")) {
-				username = jsonParts[i + 2].trim();
-			} else if (jsonPart.equals("\"token\"")) {
-				token = jsonParts[i + 2].trim();
-			}
-		}
-
-		if (username == null || username.isEmpty()) throw new Exception("No es un JSON válido de MmceToken.");
-		if (token == null || token.isEmpty()) throw new Exception("No es un JSON válido de MmceToken.");
-
-		return new MmceToken(token, username);
+	/**
+	 * Crea una instancia de objeto a partir de un JSON
+	 * @param json
+	 * @return MmceToken con los datos del JSON
+	 */
+	public static MmceToken fromJson(String json) {
+		return new Gson().fromJson(json, MmceToken.class);
 	}
 }
